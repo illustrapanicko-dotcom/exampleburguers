@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BlackBun Burgers</title>
+
+<style>
+body{
+    margin:0;
+    font-family:Arial, Helvetica, sans-serif;
+    background:#0f1116;
+    color:white;
+}
+
+/* HEADER */
+header{
+    background:#12151c;
+    padding:15px 30px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+header h1{
+    color:#f6c177;
+    margin:0;
+}
+
+button{
+    background:#f6c177;
+    border:none;
+    padding:10px 15px;
+    border-radius:8px;
+    cursor:pointer;
+    font-weight:bold;
+}
+
+/* MENU */
+.container{
+    max-width:1100px;
+    margin:auto;
+    padding:20px;
+}
+
+.grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+    gap:20px;
+}
+
+.card{
+    background:#171a22;
+    padding:20px;
+    border-radius:12px;
+    border:1px solid #2a2f3a;
+}
+
+.card h3{ margin:0 0 10px }
+.price{ color:#f6c177; font-weight:bold }
+
+.cart{
+    position:fixed;
+    right:0;
+    top:0;
+    height:100%;
+    width:320px;
+    background:#12151c;
+    padding:20px;
+    overflow:auto;
+    transform:translateX(100%);
+    transition:.3s;
+}
+
+.cart.open{ transform:translateX(0); }
+
+input,textarea{
+    width:100%;
+    padding:8px;
+    border-radius:8px;
+    border:none;
+    margin-bottom:10px;
+}
+</style>
+</head>
+<body>
+
+<header>
+<h1>🍔 BlackBun</h1>
+<button onclick="toggleCart()">Carrito (<span id="count">0</span>)</button>
+</header>
+
+<div class="container">
+<h2>Menú</h2>
+<div id="menu" class="grid"></div>
+</div>
+
+<div id="cart" class="cart">
+<h2>Pedido</h2>
+
+<div id="items"></div>
+<h3>Total: $<span id="total">0</span></h3>
+
+<input id="nombre" placeholder="Tu nombre">
+<input id="telefono" placeholder="Tu WhatsApp">
+<textarea id="nota" placeholder="Notas"></textarea>
+
+<button onclick="enviar()">Enviar por WhatsApp</button>
+</div>
+
+<script>
+/* ===== JSON MENU ===== */
+const menuData={
+  "currency":"MXN",
+  "items":[
+    {"id":"h1","name":"Clásica","category":"Hamburguesas","price":99,"desc":"Carne, queso, lechuga"},
+    {"id":"h2","name":"Doble","category":"Hamburguesas","price":129,"desc":"Doble carne y queso"},
+    {"id":"h3","name":"BBQ Bacon","category":"Hamburguesas","price":139,"desc":"BBQ y tocino"},
+    {"id":"p1","name":"Papas","category":"Extras","price":55,"desc":"Papas fritas"},
+    {"id":"b1","name":"Refresco","category":"Bebidas","price":25,"desc":"Coca 355ml"}
+  ]
+};
+
+/* ===== ESTADO ===== */
+let cart={};
+
+/* ===== CARGAR MENU ===== */
+function cargarMenu(){
+const menu=document.getElementById("menu");
+
+menuData.items.forEach(i=>{
+menu.innerHTML+=`
+<div class="card">
+<h3>${i.name}</h3>
+<p>${i.desc}</p>
+<div class="price">$${i.price}</div>
+<button onclick="add('${i.id}')">Agregar</button>
+</div>`;
+});
+}
+
+cargarMenu();
+
+/* ===== CARRITO ===== */
+function add(id){
+cart[id]=(cart[id]||0)+1;
+renderCart();
+}
+
+function renderCart(){
+const cont=document.getElementById("items");
+const totalEl=document.getElementById("total");
+const count=document.getElementById("count");
+
+cont.innerHTML="";
+let total=0, c=0;
+
+for(let id in cart){
+const item=menuData.items.find(i=>i.id==id);
+const qty=cart[id];
+const sub=item.price*qty;
+
+total+=sub;
+c+=qty;
+
+cont.innerHTML+=`
+<p>${qty}x ${item.name} - $${sub}</p>`;
+}
+
+totalEl.textContent=total;
+count.textContent=c;
+}
+
+/* ===== TOGGLE ===== */
+function toggleCart(){
+document.getElementById("cart").classList.toggle("open");
+}
+
+/* ===== WHATSAPP ===== */
+function enviar(){
+const nombre=document.getElementById("nombre").value;
+const tel=document.getElementById("telefono").value;
+const nota=document.getElementById("nota").value;
+
+let msg=`🍔 *Nuevo pedido*%0A`;
+msg+=`Cliente: ${nombre}%0A`;
+msg+=`Tel: ${tel}%0A%0A`;
+
+for(let id in cart){
+const item=menuData.items.find(i=>i.id==id);
+msg+=`${cart[id]}x ${item.name}%0A`;
+}
+
+msg+=`%0ANota: ${nota}`;
+
+window.open(
+`https://wa.me/5215567864301?text=${msg}`,
+"_blank"
+);
+}
+</script>
+
+</body>
+</html>
