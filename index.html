@@ -1,112 +1,156 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>BlackBun Burgers</title>
 
 <style>
 body{
-    margin:0;
-    font-family:Arial, Helvetica, sans-serif;
-    background:#0f1116;
-    color:white;
+  margin:0;
+  font-family:Arial, Helvetica, sans-serif;
+  background:#0f1116;
+  color:white;
 }
 
 /* HEADER */
 header{
-    background:#12151c;
-    padding:15px 30px;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
+  background:#12151c;
+  padding:15px 30px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  position:sticky;
+  top:0;
+  z-index:10;
 }
 
 header h1{
-    color:#f6c177;
-    margin:0;
+  color:#f6c177;
+  margin:0;
 }
 
 button{
-    background:#f6c177;
-    border:none;
-    padding:10px 15px;
-    border-radius:8px;
-    cursor:pointer;
-    font-weight:bold;
+  background:#f6c177;
+  border:none;
+  padding:10px 15px;
+  border-radius:8px;
+  cursor:pointer;
+  font-weight:bold;
 }
 
 /* MENU */
 .container{
-    max-width:1100px;
-    margin:auto;
-    padding:20px;
+  max-width:1100px;
+  margin:auto;
+  padding:20px;
+}
+
+.cat-title{
+  margin:28px 0 12px;
+  color:#f6c177;
 }
 
 .grid{
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
-    gap:20px;
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+  gap:20px;
 }
 
 .card{
-    background:#171a22;
-    padding:20px;
-    border-radius:12px;
-    border:1px solid #2a2f3a;
+  background:#171a22;
+  padding:16px;
+  border-radius:12px;
+  border:1px solid #2a2f3a;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
 }
 
-.card h3{ margin:0 0 10px }
+.thumb{
+  width:100%;
+  height:160px;
+  border-radius:10px;
+  background:#0b0d12;
+  border:1px solid #2a2f3a;
+  overflow:hidden;
+}
+.thumb img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+
+.card h3{ margin:0; }
 .price{ color:#f6c177; font-weight:bold }
+
+.select{
+  width:100%;
+  padding:8px;
+  border-radius:8px;
+  border:1px solid #2a2f3a;
+  background:#0f1116;
+  color:white;
+}
+
+.small{
+  opacity:.85;
+  font-size:.92rem;
+}
 
 /* CARRITO */
 .cart{
-    position:fixed;
-    right:0;
-    top:0;
-    height:100%;
-    width:320px;
-    background:#12151c;
-    padding:20px;
-    overflow:auto;
-    transform:translateX(100%);
-    transition:.3s;
+  position:fixed;
+  right:0;
+  top:0;
+  height:100%;
+  width:340px;
+  background:#12151c;
+  padding:20px;
+  overflow:auto;
+  transform:translateX(100%);
+  transition:.3s;
+  border-left:1px solid #2a2f3a;
 }
 
 .cart.open{ transform:translateX(0); }
 
 input,textarea{
-    width:100%;
-    padding:8px;
-    border-radius:8px;
-    border:none;
-    margin-bottom:10px;
+  width:100%;
+  padding:8px;
+  border-radius:8px;
+  border:none;
+  margin-bottom:10px;
 }
+
+hr{border:0;border-top:1px solid #2a2f3a;margin:12px 0;}
 </style>
 </head>
 <body>
 
 <header>
-<h1>🍔 BlackBun</h1>
-<button onclick="toggleCart()">Carrito (<span id="count">0</span>)</button>
+  <h1>🍔 BlackBun</h1>
+  <button onclick="toggleCart()">Carrito (<span id="count">0</span>)</button>
 </header>
 
 <div class="container">
-<h2>Menú</h2>
-<div id="menu" class="grid"></div>
+  <h2>Menú</h2>
+  <div id="menu"></div>
 </div>
 
 <div id="cart" class="cart">
-<h2>Pedido</h2>
+  <h2>Pedido</h2>
 
-<div id="items"></div>
-<h3>Total: $<span id="total">0</span></h3>
+  <div id="items"></div>
+  <hr>
+  <h3>Total: $<span id="total">0</span></h3>
 
-<input id="nombre" placeholder="Tu nombre">
-<input id="telefono" placeholder="Tu WhatsApp">
-<textarea id="nota" placeholder="Notas"></textarea>
+  <input id="nombre" placeholder="Tu nombre">
+  <input id="telefono" placeholder="Tu WhatsApp">
+  <textarea id="nota" placeholder="Notas"></textarea>
 
-<button onclick="enviar()">Enviar por WhatsApp</button>
+  <button onclick="enviar()">Enviar por WhatsApp</button>
 </div>
 
 <script>
@@ -114,112 +158,256 @@ input,textarea{
 const MENU_URL =
 "https://script.google.com/macros/s/AKfycbxN7uXn2y4CZMRHeMmpg525be0izu1WF2indrM8vBJq75HBxnl9kb-BtR52lCGMSMCT0g/exec";
 
-const WHATSAPP_RESTAURANTE = "5215567864301";
+let state = {
+  currency: "MXN",
+  whatsapp: "5215567864301",
+  items: [],
+  options: []
+};
 
-let menuData={currency:"MXN",items:[]};
-let cart={};
+// cart key = id + opciones elegidas
+let cart = {}; // { key: {id, qty, picks:{group:[...names]}, extraTotal} }
 
 /* ===== JSONP (evita CORS) ===== */
 function loadMenu(){
-return new Promise((resolve,reject)=>{
-const cb="menuCB_"+Date.now();
+  return new Promise((resolve,reject)=>{
+    const cb="menuCB_"+Date.now();
 
-window[cb]=(data)=>{
-menuData=data;
-delete window[cb];
-resolve(data);
-};
+    window[cb]=(data)=>{
+      state = data;
+      delete window[cb];
+      resolve(data);
+    };
 
-const s=document.createElement("script");
-s.src=`${MENU_URL}?callback=${cb}&t=${Date.now()}`;
-s.onerror=reject;
-document.body.appendChild(s);
-});
+    const s=document.createElement("script");
+    s.src=`${MENU_URL}?callback=${cb}&t=${Date.now()}`;
+    s.onerror=reject;
+    document.body.appendChild(s);
+  });
+}
+
+function optionsByGroup(group){
+  return state.options.filter(o=>o.group===group);
+}
+
+function optionLabel(opt){
+  return opt.extra > 0 ? `${opt.name} (+$${opt.extra})` : opt.name;
 }
 
 /* ===== MENU ===== */
 function renderMenu(){
-const menu=document.getElementById("menu");
-menu.innerHTML="";
+  const menu=document.getElementById("menu");
+  menu.innerHTML="";
 
-menuData.items.forEach(i=>{
-menu.innerHTML+=`
-<div class="card">
-<h3>${i.name}</h3>
-<p>${i.desc||""}</p>
-<div class="price">$${i.price}</div>
-<button onclick="add('${i.id}')">Agregar</button>
-</div>`;
-});
+  // agrupar por categoria
+  const byCat = {};
+  state.items.forEach(it=>{
+    byCat[it.category] = byCat[it.category] || [];
+    byCat[it.category].push(it);
+  });
+
+  Object.keys(byCat).forEach(cat=>{
+    const section = document.createElement("div");
+    section.innerHTML = `<h3 class="cat-title">${cat}</h3><div class="grid" id="grid_${cat}"></div>`;
+    menu.appendChild(section);
+
+    const grid = section.querySelector(".grid");
+
+    byCat[cat].forEach(i=>{
+      const card = document.createElement("div");
+      card.className = "card";
+
+      const hasImg = i.imageUrl && i.imageUrl.trim().length>0;
+      card.innerHTML = `
+        ${hasImg ? `<div class="thumb"><img src="${i.imageUrl}" alt="${i.name}"></div>` : ``}
+        <div>
+          <h3>${i.name}</h3>
+          <div class="small">${i.desc||""}</div>
+        </div>
+        <div class="price">$${i.price}</div>
+        <div id="opts_${i.id}"></div>
+        <button onclick="addToCart('${i.id}')">Agregar</button>
+      `;
+
+      // pintar selects de opciones si aplica
+      const optsDiv = card.querySelector(`#opts_${i.id}`);
+      if(i.optionGroups && i.optionGroups.length){
+        i.optionGroups.forEach(group=>{
+          const groupOpts = optionsByGroup(group);
+          if(!groupOpts.length) return;
+
+          // si el tipo del grupo es multi o single: tomamos del primer item del grupo
+          const groupType = groupOpts[0].type || "single";
+
+          const label = document.createElement("div");
+          label.className = "small";
+          label.style.marginTop = "6px";
+          label.textContent = group + (groupType==="multi" ? " (elige varios)" : "");
+
+          optsDiv.appendChild(label);
+
+          if(groupType === "single"){
+            const sel = document.createElement("select");
+            sel.className="select";
+            sel.id = `sel_${i.id}_${group}`;
+            sel.innerHTML = `<option value="">Selecciona…</option>` +
+              groupOpts.map(o=>`<option value="${o.name}" data-extra="${o.extra}">${optionLabel(o)}</option>`).join("");
+            optsDiv.appendChild(sel);
+          } else {
+            // multi: checkbox list simple
+            groupOpts.forEach(o=>{
+              const row = document.createElement("label");
+              row.className="small";
+              row.style.display="block";
+              row.style.marginTop="6px";
+              row.innerHTML = `<input type="checkbox" id="chk_${i.id}_${group}_${o.name}" data-group="${group}" data-name="${o.name}" data-extra="${o.extra}"> ${optionLabel(o)}`;
+              optsDiv.appendChild(row);
+            });
+          }
+        });
+      }
+
+      grid.appendChild(card);
+    });
+  });
+}
+
+function collectPicks(item){
+  const picks = {}; // {group:[names]}
+  let extraTotal = 0;
+
+  (item.optionGroups||[]).forEach(group=>{
+    const groupOpts = optionsByGroup(group);
+    if(!groupOpts.length) return;
+    const groupType = groupOpts[0].type || "single";
+
+    if(groupType === "single"){
+      const sel = document.getElementById(`sel_${item.id}_${group}`);
+      if(sel && sel.value){
+        picks[group] = [sel.value];
+        const opt = groupOpts.find(o=>o.name===sel.value);
+        if(opt) extraTotal += Number(opt.extra||0);
+      }
+    } else {
+      // multi checkboxes
+      const checked = [];
+      groupOpts.forEach(o=>{
+        const id = `chk_${item.id}_${group}_${o.name}`;
+        const chk = document.getElementById(id);
+        if(chk && chk.checked){
+          checked.push(o.name);
+          extraTotal += Number(o.extra||0);
+        }
+      });
+      if(checked.length) picks[group] = checked;
+    }
+  });
+
+  return {picks, extraTotal};
 }
 
 /* ===== CARRITO ===== */
-function add(id){
-cart[id]=(cart[id]||0)+1;
-renderCart();
+function addToCart(id){
+  const item = state.items.find(x=>x.id===id);
+  if(!item) return;
+
+  const {picks, extraTotal} = collectPicks(item);
+  const key = id + "::" + JSON.stringify(picks);
+
+  if(!cart[key]){
+    cart[key] = { id, qty:0, picks, extraTotal };
+  }
+  cart[key].qty += 1;
+
+  renderCart();
 }
 
 function renderCart(){
-const cont=document.getElementById("items");
-const totalEl=document.getElementById("total");
-const count=document.getElementById("count");
+  const cont=document.getElementById("items");
+  const totalEl=document.getElementById("total");
+  const count=document.getElementById("count");
 
-cont.innerHTML="";
-let total=0,c=0;
+  cont.innerHTML="";
+  let total=0,c=0;
 
-for(let id in cart){
-const item=menuData.items.find(i=>i.id==id);
-if(!item) continue;
+  Object.keys(cart).forEach(key=>{
+    const line = cart[key];
+    const item = state.items.find(i=>i.id===line.id);
+    if(!item) return;
 
-const qty=cart[id];
-const sub=item.price*qty;
+    const unit = item.price + (line.extraTotal||0);
+    const sub = unit * line.qty;
 
-total+=sub;
-c+=qty;
+    total += sub;
+    c += line.qty;
 
-cont.innerHTML+=`<p>${qty}x ${item.name} - $${sub}</p>`;
+    const picksText = formatPicks(line.picks);
+
+    cont.innerHTML += `
+      <div>
+        <b>${line.qty}x ${item.name}</b>
+        ${picksText ? `<div class="small">${picksText}</div>` : ``}
+        <div class="small">Unit: $${unit} — Sub: $${sub}</div>
+      </div>
+      <hr>
+    `;
+  });
+
+  totalEl.textContent=total;
+  count.textContent=c;
 }
 
-totalEl.textContent=total;
-count.textContent=c;
+function formatPicks(picks){
+  const parts = [];
+  Object.keys(picks||{}).forEach(g=>{
+    parts.push(`${g}: ${picks[g].join(", ")}`);
+  });
+  return parts.join(" | ");
 }
 
 function toggleCart(){
-document.getElementById("cart").classList.toggle("open");
+  document.getElementById("cart").classList.toggle("open");
 }
 
 /* ===== WHATSAPP ===== */
 function enviar(){
-const nombre=document.getElementById("nombre").value.trim();
-const tel=document.getElementById("telefono").value.trim();
-const nota=document.getElementById("nota").value.trim();
+  const nombre=document.getElementById("nombre").value.trim();
+  const tel=document.getElementById("telefono").value.trim();
+  const nota=document.getElementById("nota").value.trim();
 
-if(!nombre||!tel){
-alert("Escribe nombre y WhatsApp");
-return;
-}
+  if(!nombre||!tel){
+    alert("Escribe nombre y WhatsApp");
+    return;
+  }
+  if(Object.keys(cart).length===0){
+    alert("Agrega productos al carrito");
+    return;
+  }
 
-let msg=`🍔 *Nuevo pedido*%0A`;
-msg+=`Cliente: ${nombre}%0A`;
-msg+=`Tel: ${tel}%0A%0A`;
+  let msg=`🍔 *Nuevo pedido*%0A`;
+  msg+=`Cliente: ${nombre}%0A`;
+  msg+=`Tel: ${tel}%0A%0A`;
 
-for(let id in cart){
-const item=menuData.items.find(i=>i.id==id);
-msg+=`${cart[id]}x ${item.name}%0A`;
-}
+  Object.keys(cart).forEach(key=>{
+    const line = cart[key];
+    const item = state.items.find(i=>i.id===line.id);
+    if(!item) return;
 
-if(nota) msg+=`%0ANota: ${encodeURIComponent(nota)}`;
+    const unit = item.price + (line.extraTotal||0);
+    const picksText = formatPicks(line.picks);
+    msg += `${line.qty}x ${item.name} ($${unit})%0A`;
+    if(picksText) msg += `   - ${picksText}%0A`;
+  });
 
-window.open(
-`https://wa.me/${WHATSAPP_RESTAURANTE}?text=${msg}`,
-"_blank"
-);
+  if(nota) msg += `%0ANota: ${encodeURIComponent(nota)}`;
+
+  window.open(`https://wa.me/${state.whatsapp}?text=${msg}`,"_blank");
 }
 
 /* ===== INIT ===== */
 loadMenu()
-.then(()=>renderMenu())
-.catch(()=>alert("Error cargando menú"));
+  .then(()=>renderMenu())
+  .catch(()=>alert("Error cargando menú (revisa Apps Script / nombres de hojas)"));
 </script>
 
 </body>
