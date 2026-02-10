@@ -133,7 +133,8 @@ header{
 .desc{color:var(--muted); font-size:13px; line-height:1.35; min-height:34px;}
 .row{display:flex; align-items:center; justify-content:space-between; gap:10px;}
 .price{font-weight:900; color:var(--accent);}
-.small{color:#e5d824; font-size:20px;}
+
+.small{color:var(--muted); font-size:12px;}
 
 .select{
   width:100%; padding:10px;
@@ -249,6 +250,14 @@ header{
 .footer-actions{display:flex; gap:10px; margin-top:12px;}
 .footer-actions .btn{flex:1;}
 
+.locbox{
+  margin-top:10px;
+  padding:10px 12px;
+  border-radius:14px;
+  border:1px solid rgba(34,49,71,.75);
+  background:rgba(15,22,34,.35);
+}
+
 /* ===== FAB ===== */
 .fab{
   position:fixed; right:16px; bottom:16px; z-index:60;
@@ -297,7 +306,7 @@ header{
 
 <div class="footer">
   <div class="small">
-    📍 Pedido por WhatsApp • Horario y dirección aquí (opcional)
+    📍 Pedido por WhatsApp • Cambia links de redes y teléfono abajo
   </div>
 
   <!-- Cambia estos links por los reales -->
@@ -344,7 +353,7 @@ header{
     <div class="small" id="linesInfo">Carrito vacío</div>
   </div>
 
-  <!-- Ahora opcionales -->
+  <!-- opcionales -->
   <div class="field">
     <input id="nombre" placeholder="Tu nombre (opcional)" />
   </div>
@@ -354,6 +363,15 @@ header{
 
   <div class="field">
     <textarea id="nota" placeholder="Notas (sin cebolla, extra salsa, etc.)"></textarea>
+  </div>
+
+  <!-- UBICACIÓN -->
+  <div class="locbox">
+    <label class="small" style="display:block; font-weight:900; color:var(--text);">
+      <input type="checkbox" id="sendLocation" />
+      Enviar mi ubicación actual (GPS)
+    </label>
+    <div class="small" id="locStatus" style="margin-top:6px;"></div>
   </div>
 
   <div class="footer-actions">
@@ -470,6 +488,8 @@ function applyFilters(){
           const lbl=document.createElement("div");
           lbl.className="small";
           lbl.style.marginTop="6px";
+          lbl.style.fontWeight="900";
+          lbl.style.color="var(--text)";
           lbl.textContent = (type==="multi") ? `${group} (elige varios)` : group;
           optsDiv.appendChild(lbl);
 
@@ -486,6 +506,7 @@ function applyFilters(){
               row.className="small";
               row.style.display="block";
               row.style.marginTop="6px";
+              row.style.color="var(--text)";
               row.innerHTML = `<input type="checkbox" id="chk_${i.id}_${group}_${o.name}"> ${optionLabel(o)}`;
               optsDiv.appendChild(row);
             });
@@ -611,7 +632,8 @@ function closeCart(){
 }
 function scrollToTop(){ window.scrollTo({top:0, behavior:"smooth"}); }
 
-function enviar(){
+/* ====== UBICACIÓN + ENVÍO ====== */
+async function enviar(){
   if(Object.keys(cart).length===0){ alert("Agrega productos al carrito"); return; }
 
   const nombre=(document.getElementById("nombre").value.trim()) || "(no proporcionado)";
@@ -643,6 +665,38 @@ function enviar(){
   },0);
 
   msg += `%0ATotal: $${total}%0A`;
+
+  // UBICACIÓN opcional
+  const wantLoc = document.getElementById("sendLocation")?.checked;
+  const locStatus = document.getElementById("locStatus");
+  if(locStatus) locStatus.textContent = "";
+
+  if(wantLoc){
+    if(!navigator.geolocation){
+      if(locStatus) locStatus.textContent = "Tu navegador no soporta GPS.";
+      msg += `%0A📍 Ubicación: (no soportada)%0A`;
+    } else {
+      if(locStatus) locStatus.textContent = "Pidiendo ubicación…";
+      try{
+        const pos = await new Promise((resolve,reject)=>{
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            enableHighAccuracy:true,
+            timeout:10000,
+            maximumAge:30000
+          });
+        });
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        const maps = `https://maps.google.com/?q=${lat},${lng}`;
+        msg += `%0A📍 Ubicación: ${encodeURIComponent(maps)}%0A`;
+        if(locStatus) locStatus.textContent = "Ubicación agregada ✅";
+      }catch(err){
+        if(locStatus) locStatus.textContent = "No se pudo obtener ubicación (permiso/GPS).";
+        msg += `%0A📍 Ubicación: (no autorizada)%0A`;
+      }
+    }
+  }
+
   if(nota) msg += `%0ANota: ${encodeURIComponent(nota)}%0A`;
 
   const wa = state.whatsapp || "5210000000000";
