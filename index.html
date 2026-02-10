@@ -59,6 +59,7 @@ button{
 .card h3{ margin:0 0 10px }
 .price{ color:#f6c177; font-weight:bold }
 
+/* CARRITO */
 .cart{
     position:fixed;
     right:0;
@@ -109,37 +110,48 @@ input,textarea{
 </div>
 
 <script>
-/* ===== JSON MENU ===== */
-const menuData={
-  "currency":"MXN",
-  "items":[
-    {"id":"h1","name":"Clásica","category":"Hamburguesas","price":99,"desc":"Carne, queso, lechuga"},
-    {"id":"h2","name":"Doble","category":"Hamburguesas","price":129,"desc":"Doble carne y queso"},
-    {"id":"h3","name":"BBQ Bacon","category":"Hamburguesas","price":139,"desc":"BBQ y tocino"},
-    {"id":"p1","name":"Papas","category":"Extras","price":55,"desc":"Papas fritas"},
-    {"id":"b1","name":"Refresco","category":"Bebidas","price":25,"desc":"Coca 355ml"}
-  ]
-};
+/* ========= CONFIG ========= */
+const MENU_URL =
+"https://script.google.com/macros/s/AKfycbxN7uXn2y4CZMRHeMmpg525be0izu1WF2indrM8vBJq75HBxnl9kb-BtR52lCGMSMCT0g/exec";
 
-/* ===== ESTADO ===== */
+const WHATSAPP_RESTAURANTE = "5215567864301";
+
+let menuData={currency:"MXN",items:[]};
 let cart={};
 
-/* ===== CARGAR MENU ===== */
-function cargarMenu(){
+/* ===== JSONP (evita CORS) ===== */
+function loadMenu(){
+return new Promise((resolve,reject)=>{
+const cb="menuCB_"+Date.now();
+
+window[cb]=(data)=>{
+menuData=data;
+delete window[cb];
+resolve(data);
+};
+
+const s=document.createElement("script");
+s.src=`${MENU_URL}?callback=${cb}&t=${Date.now()}`;
+s.onerror=reject;
+document.body.appendChild(s);
+});
+}
+
+/* ===== MENU ===== */
+function renderMenu(){
 const menu=document.getElementById("menu");
+menu.innerHTML="";
 
 menuData.items.forEach(i=>{
 menu.innerHTML+=`
 <div class="card">
 <h3>${i.name}</h3>
-<p>${i.desc}</p>
+<p>${i.desc||""}</p>
 <div class="price">$${i.price}</div>
 <button onclick="add('${i.id}')">Agregar</button>
 </div>`;
 });
 }
-
-cargarMenu();
 
 /* ===== CARRITO ===== */
 function add(id){
@@ -153,34 +165,39 @@ const totalEl=document.getElementById("total");
 const count=document.getElementById("count");
 
 cont.innerHTML="";
-let total=0, c=0;
+let total=0,c=0;
 
 for(let id in cart){
 const item=menuData.items.find(i=>i.id==id);
+if(!item) continue;
+
 const qty=cart[id];
 const sub=item.price*qty;
 
 total+=sub;
 c+=qty;
 
-cont.innerHTML+=`
-<p>${qty}x ${item.name} - $${sub}</p>`;
+cont.innerHTML+=`<p>${qty}x ${item.name} - $${sub}</p>`;
 }
 
 totalEl.textContent=total;
 count.textContent=c;
 }
 
-/* ===== TOGGLE ===== */
 function toggleCart(){
 document.getElementById("cart").classList.toggle("open");
 }
 
 /* ===== WHATSAPP ===== */
 function enviar(){
-const nombre=document.getElementById("nombre").value;
-const tel=document.getElementById("telefono").value;
-const nota=document.getElementById("nota").value;
+const nombre=document.getElementById("nombre").value.trim();
+const tel=document.getElementById("telefono").value.trim();
+const nota=document.getElementById("nota").value.trim();
+
+if(!nombre||!tel){
+alert("Escribe nombre y WhatsApp");
+return;
+}
 
 let msg=`🍔 *Nuevo pedido*%0A`;
 msg+=`Cliente: ${nombre}%0A`;
@@ -191,13 +208,18 @@ const item=menuData.items.find(i=>i.id==id);
 msg+=`${cart[id]}x ${item.name}%0A`;
 }
 
-msg+=`%0ANota: ${nota}`;
+if(nota) msg+=`%0ANota: ${encodeURIComponent(nota)}`;
 
 window.open(
-`https://wa.me/5215567864301?text=${msg}`,
+`https://wa.me/${WHATSAPP_RESTAURANTE}?text=${msg}`,
 "_blank"
 );
 }
+
+/* ===== INIT ===== */
+loadMenu()
+.then(()=>renderMenu())
+.catch(()=>alert("Error cargando menú"));
 </script>
 
 </body>
