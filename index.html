@@ -37,14 +37,18 @@ header{
   display:flex; align-items:center; gap:12px;
 }
 .brand{
-  display:flex; align-items:center; gap:10px; min-width:260px;
+  display:flex; align-items:center; gap:12px;
+  min-width:280px;
 }
-.logo{
-  width:38px; height:38px; border-radius:12px;
+.brand-logo{
+  width:44px; height:44px;
+  border-radius:12px;
+  border:1px solid rgba(34,49,71,.75);
+  background:rgba(15,22,34,.55);
   display:grid; place-items:center;
-  background:rgba(246,193,119,.12);
-  border:1px solid rgba(246,193,119,.25);
+  overflow:hidden;
 }
+.brand-logo img{width:100%;height:100%;object-fit:cover;display:block;}
 .brand h1{margin:0; font-size:16px; font-weight:900; line-height:1.1;}
 .brand .sub{display:block; font-size:12px; color:var(--muted); margin-top:2px;}
 
@@ -152,6 +156,34 @@ header{
   color:#1b140b;
 }
 
+/* ===== FOOTER / SOCIAL ===== */
+.footer{
+  max-width:1100px;
+  margin:26px auto 70px;
+  padding:14px 18px;
+  border-top:1px solid rgba(34,49,71,.6);
+  color:var(--muted);
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  align-items:center;
+  justify-content:space-between;
+}
+.socials{display:flex; gap:8px; flex-wrap:wrap;}
+.sbtn{
+  display:inline-flex; align-items:center; gap:8px;
+  padding:10px 12px;
+  border-radius:999px;
+  border:1px solid rgba(34,49,71,.75);
+  background:rgba(15,22,34,.55);
+  color:var(--text);
+  text-decoration:none;
+  font-weight:900;
+  font-size:13px;
+}
+.sbtn:hover{border-color:rgba(246,193,119,.35)}
+.sicon{opacity:.9}
+
 /* ===== CART ===== */
 .overlay{
   position:fixed; inset:0;
@@ -238,7 +270,9 @@ header{
 <header>
   <div class="header-inner">
     <div class="brand">
-      <div class="logo">🍗</div>
+      <div class="brand-logo" title="Alitas El Dog">
+        <img src="logo.png" alt="Logo Alitas El Dog" onerror="this.style.display='none'">
+      </div>
       <div>
         <h1>Alitas “El Dog” <span class="badge" id="badgeTop">0</span></h1>
         <span class="sub">Pedido rápido por WhatsApp</span>
@@ -259,6 +293,28 @@ header{
 <div class="container">
   <div class="chips" id="chips"></div>
   <div id="menu"></div>
+</div>
+
+<div class="footer">
+  <div class="small">
+    📍 Pedido por WhatsApp • Horario y dirección aquí (opcional)
+  </div>
+
+  <!-- Cambia estos links por los reales -->
+  <div class="socials">
+    <a class="sbtn" href="https://wa.me/5215539834256" target="_blank" rel="noopener">
+      <span class="sicon">🟢</span> WhatsApp
+    </a>
+    <a class="sbtn" href="https://facebook.com/" target="_blank" rel="noopener">
+      <span class="sicon">🔵</span> Facebook
+    </a>
+    <a class="sbtn" href="https://instagram.com/" target="_blank" rel="noopener">
+      <span class="sicon">🟣</span> Instagram
+    </a>
+    <a class="sbtn" href="https://tiktok.com/" target="_blank" rel="noopener">
+      <span class="sicon">⚫</span> TikTok
+    </a>
+  </div>
 </div>
 
 <div class="fab" onclick="openCart()">
@@ -288,9 +344,17 @@ header{
     <div class="small" id="linesInfo">Carrito vacío</div>
   </div>
 
-  <div class="field"><input id="nombre" placeholder="Tu nombre" /></div>
-  <div class="field"><input id="telefono" placeholder="Tu WhatsApp (10 dígitos)" inputmode="numeric" /></div>
-  <div class="field"><textarea id="nota" placeholder="Notas (sin cebolla, extra salsa, etc.)"></textarea></div>
+  <!-- Ahora opcionales -->
+  <div class="field">
+    <input id="nombre" placeholder="Tu nombre (opcional)" />
+  </div>
+  <div class="field">
+    <input id="telefono" placeholder="Tu WhatsApp (opcional)" inputmode="numeric" />
+  </div>
+
+  <div class="field">
+    <textarea id="nota" placeholder="Notas (sin cebolla, extra salsa, etc.)"></textarea>
+  </div>
 
   <div class="footer-actions">
     <button class="btn btn-ghost" onclick="clearCart()">Vaciar</button>
@@ -299,7 +363,7 @@ header{
 </div>
 
 <script>
-/* ====== CONFIG (TU URL NUEVA v5) ====== */
+/* ====== CONFIG (TU URL v5) ====== */
 const MENU_URL = "https://script.google.com/macros/s/AKfycby8d_b2Vpd7PaGPcBrsL5kEOg-568h3DF_gwtaj9EWTOwPnaEuyV37Jj5KrSY4KjOG2ZA/exec";
 
 let state = { currency:"MXN", whatsapp:"", items:[], options:[] };
@@ -548,12 +612,11 @@ function closeCart(){
 function scrollToTop(){ window.scrollTo({top:0, behavior:"smooth"}); }
 
 function enviar(){
-  const nombre=document.getElementById("nombre").value.trim();
-  const tel=document.getElementById("telefono").value.trim();
-  const nota=document.getElementById("nota").value.trim();
-
-  if(!nombre || !tel){ alert("Escribe tu nombre y WhatsApp"); return; }
   if(Object.keys(cart).length===0){ alert("Agrega productos al carrito"); return; }
+
+  const nombre=(document.getElementById("nombre").value.trim()) || "(no proporcionado)";
+  const tel=(document.getElementById("telefono").value.trim()) || "(no proporcionado)";
+  const nota=document.getElementById("nota").value.trim();
 
   let msg = `🍗 *Alitas "El Dog"*%0A`;
   msg += `🧾 *Nuevo pedido*%0A%0A`;
